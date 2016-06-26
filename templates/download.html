@@ -20,7 +20,7 @@
 
 
 {{#items}}
-<img src="{{iconString}}">
+<img src="{{iconString}}" style="width:60px;height:60px;border-radius:12px;">
 <h4><a href="itms-services://?action=download-manifest&url=https://{{ip}}:{{port}}/plist/{{name}}"><span class="name">{{name}}</span>{{description}}</a></h4>
 {{/items}}
 
@@ -29,7 +29,7 @@
 	$('#qrcodeTable').qrcode({
 		render	: "table",
 		text	: url
-	});	
+	});
 
 </script>
 

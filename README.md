@@ -9,6 +9,7 @@
 
 # 需要
 * [nodejs](https://nodejs.org/)
+* [delapecci](https://github.com/delapecci)补充:在linux平台上，还需要先安装[pngcrush](http://pmt.sourceforge.net/pngcrush/)
 
 # 安装
 ```
@@ -62,7 +63,7 @@ $ git clone git@github.com:bumaociyuan/ios-ipa-server.git
 
 # 安装依赖包
 $ cd ios-ipa-server
-$ npm install 
+$ npm install
 
 # 建立link 方便调试
 $ npm link
