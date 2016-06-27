@@ -17,6 +17,8 @@ var AdmZip = require('adm-zip');
 var os = require('os');
 require('shelljs/global');
 
+var _cache_mem = {};
+
 var ipAddress = underscore
   .chain(require('os').networkInterfaces())
   .values()
@@ -168,41 +170,48 @@ function itemInfoWithName(name, ipasDir) {
   var time = new Date(stat.mtime);
   var timeString = strftime('%F %H:%M', time);
 
-  // get ipa icon only works on macos
-  var iconString = '';
-  var ipa = new AdmZip(location);
-  var ipaEntries = ipa.getEntries();
-  var tmpIn = ipasDir + '/tmpIn.png';
-  var tmpOut = ipasDir + '/tmpOut.png';
-  ipaEntries.forEach(function(ipaEntry) {
-    if (ipaEntry.entryName.indexOf('AppIcon60x60@3x.png') != -1) {
-      var buffer = new Buffer(ipaEntry.getData());
-      if (buffer.length) {
-        fs.writeFileSync(tmpIn, buffer);
+  var _cache_key = location + '|' + timeString;
+  if (_cache_mem[_cache_key] == undefined) {
 
-        // FIXME: should catch error during shell process
-        if (process.platform == 'darwin') {
-          var result = exec(path.join(__dirname, '..', 'pngcrush -q -revert-iphone-optimizations ') + ' ' + tmpIn + ' ' + tmpOut).output;
-        } else if (process.platform == 'linux') {
-          // just call system bundled pngcrush
-          var result = exec('pngcrush -q -revert-iphone-optimizations ' + tmpIn + ' ' + tmpOut).output;
+    // get ipa icon only works on macos
+    var iconString = '';
+    var ipa = new AdmZip(location);
+    var ipaEntries = ipa.getEntries();
+    var tmpIn = ipasDir + '/tmpIn.png';
+    var tmpOut = ipasDir + '/tmpOut.png';
+    ipaEntries.forEach(function(ipaEntry) {
+      if (ipaEntry.entryName.indexOf('AppIcon60x60@3x.png') != -1) {
+        var buffer = new Buffer(ipaEntry.getData());
+        if (buffer.length) {
+          fs.writeFileSync(tmpIn, buffer);
+
+          // FIXME: should catch error during shell process
+          if (process.platform == 'darwin') {
+            var result = exec(path.join(__dirname, '..', 'pngcrush -q -revert-iphone-optimizations ') + ' ' + tmpIn + ' ' + tmpOut).output;
+            console.log(result);
+          } else if (process.platform == 'linux') {
+            // just call system bundled pngcrush
+            var result = exec('pngcrush -q -revert-iphone-optimizations ' + tmpIn + ' ' + tmpOut).output;
+            console.log(result);
+          }
+
+          iconString = 'data:image/png;base64,' + base64_encode(tmpOut);
         }
-
-        iconString = 'data:image/png;base64,' + base64_encode(tmpOut);
       }
-    }
-  });
-  fs.removeSync(tmpIn);
-  fs.removeSync(tmpOut);
+    });
+    fs.removeSync(tmpIn);
+    fs.removeSync(tmpOut);
 
-  return {
-    name: name,
-    description: '   更新: ' + timeString,
-    time: time,
-    iconString: iconString,
-    ip: ipAddress,
-    port: port,
+    _cache_mem[_cache_key] = {
+      name: name,
+      description: '   更新: ' + timeString,
+      time: time,
+      iconString: iconString,
+      ip: ipAddress,
+      port: port,
+    };
   }
+  return _cache_mem[_cache_key];
 }
 
 function base64_encode(file) {
