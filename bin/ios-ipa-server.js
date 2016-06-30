@@ -174,12 +174,15 @@ function itemInfoWithName(name, ipasDir) {
   if (_cache_mem[_cache_key] == undefined) {
 
     // get ipa icon only works on macos
+    //console.log('1>>>>>' + name);
+    //if (name.indexOf('-RC-') > 0) {
     var iconString = '';
     var ipa = new AdmZip(location);
     var ipaEntries = ipa.getEntries();
     var tmpIn = ipasDir + '/tmpIn.png';
     var tmpOut = ipasDir + '/tmpOut.png';
     ipaEntries.forEach(function(ipaEntry) {
+      //console.log('2>>>>>>' + ipaEntry.entryName);
       if (ipaEntry.entryName.indexOf('AppIcon60x60@3x.png') != -1) {
         var buffer = new Buffer(ipaEntry.getData());
         if (buffer.length) {
@@ -191,8 +194,9 @@ function itemInfoWithName(name, ipasDir) {
             console.log(result);
           } else if (process.platform == 'linux') {
             // just call system bundled pngcrush
-            var result = exec('pngcrush -q -revert-iphone-optimizations ' + tmpIn + ' ' + tmpOut).output;
+            var result = exec('python ipin.py ' + tmpIn).output;
             console.log(result);
+            tmpOut = ipasDir + '/tmpIn.png';
           }
 
           iconString = 'data:image/png;base64,' + base64_encode(tmpOut);
@@ -201,6 +205,7 @@ function itemInfoWithName(name, ipasDir) {
     });
     fs.removeSync(tmpIn);
     fs.removeSync(tmpOut);
+    //}
 
     _cache_mem[_cache_key] = {
       name: name,
